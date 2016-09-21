@@ -18,8 +18,21 @@ import argparse
 import logging
 import sys
 import six
+import six.moves.urllib.parse as urlparse
 
 from oslo_utils import importutils
+from oslo_utils import encodeutils
+
+
+from keystoneclient.auth.identity import v2 as v2_auth
+from keystoneclient.auth.identity import v3 as v3_auth
+from keystoneclient import discover
+from keystoneclient import exceptions as ks_exc
+from keystoneclient import session as kssession
+
+import kidsclient
+from kidsclient import client as kidsclient
+from kidsclient.common import utils
 
 logger=logger.getLogger(__name__)
 osprofiler_profiler=importutils.try_import("osprofiler.profiler")
@@ -33,7 +46,7 @@ class KidsShell(object):
         # python-keystoneclient.
         parser.add_argument(
             '-k', '--insecure', default=False, action='store_true',
-            help=_('Explicitly allow heatclient to perform '
+            help=_('Explicitly allow kidsclient to perform '
                    '\"insecure SSL\" (https) requests. '
                    'The server\'s certificate will not be verified '
                    'against any certificate authorities. '
@@ -381,9 +394,6 @@ class KidsShell(object):
         logging.getLogger('iso8601').setLevel(logging.WARNING)
         logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
-    def _setup_verbose(self, verbose):
-        if verbose:
-            exc.verbose = 1
 
     def _discover_auth_versions(self, session, auth_url):
         # discover the API versions the server is supporting base on the
@@ -411,7 +421,7 @@ class KidsShell(object):
                         'auth_url. Identity service may not support API '
                         'version discovery. Please provide a versioned '
                         'auth_url instead.')
-                raise exc.CommandError(msg)
+                raise msg
 
         return (v2_auth_url, v3_auth_url)
 
@@ -493,7 +503,7 @@ class KidsShell(object):
             # support only v2
             auth = self._get_keystone_v2_auth(v2_auth_url, **kwargs)
         else:
-            raise exc.CommandError(_('Unable to determine the Keystone '
+            return (_('Unable to determine the Keystone '
                                      'version to authenticate with using the '
                                      'given auth_url.'))
 
@@ -529,13 +539,13 @@ class KidsShell(object):
             return 0
 
         if not args.os_username and not args.os_auth_token:
-            raise exc.CommandError(_("You must provide a username via either "
+            return (_("You must provide a username via either "
                                      "--os-username or env[OS_USERNAME] "
                                      "or a token via --os-auth-token or "
                                      "env[OS_AUTH_TOKEN]"))
 
         if not args.os_password and not args.os_auth_token:
-            raise exc.CommandError(_("You must provide a password via either "
+            return (_("You must provide a password via either "
                                      "--os-password or env[OS_PASSWORD] "
                                      "or a token via --os-auth-token or "
                                      "env[OS_AUTH_TOKEN]"))
@@ -678,7 +688,20 @@ class HelpFormatter(argparse.HelpFormatter):
         super(HelpFormatter, self).start_section(heading)
 
 def main(args=None):
-    pass
+    try:
+        if args is None:
+            args=sys.argv[1:]
+
+        KidsShell().main(args)
+    except KeyboardInterrupt:
+        print(_("...terminating kids client"),file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        if '--debug' in args or '-d' in args:
+            raise
+        else:
+            print(encodeutils.safe_encode(six.text_type(e)),file=sys.stderr)
+        sys.exit(1)
 
 if __name__=="__main__":
     main()
