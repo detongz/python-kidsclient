@@ -40,3 +40,14 @@ class SessionClient(adapter.LegacyJsonAdapter):
 
     def request(self, url, method, **kwargs):
         kwargs.setdefault('user_agent',USER_AGENT)
+
+def get_http_client(endpoint=None, session=None, **kwargs):
+    # referencing glanceclient
+    if session:
+        return SessionClient(session, **kwargs)
+    elif endpoint:
+    else:
+        return HTTPClient(endpoint=endpoint, username=username,
+                          password=password, include_pass=include_pass,
+                          endpoint_type=endpoint_type, auth_url=auth_url,
+                          **kwargs)
