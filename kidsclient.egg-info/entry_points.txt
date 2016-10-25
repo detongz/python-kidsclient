@@ -1,0 +1,11 @@
+[console_scripts]
+kids = kiesclient.main:main
+
+[kids.client]
+error = kidsclient.simple:Error
+file = kidsclient.show:File
+files = kidsclient.list:Files
+show file = kidsclient.show:File
+show files = kidsclient.list:Files
+simple = kidsclient.simple:Simple
+

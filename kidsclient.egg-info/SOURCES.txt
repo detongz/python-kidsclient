@@ -1,0 +1,14 @@
+setup.py
+kidsclient/__init__.py
+kidsclient/list.py
+kidsclient/main.py
+kidsclient/show.py
+kidsclient/simple.py
+kidsclient.egg-info/PKG-INFO
+kidsclient.egg-info/SOURCES.txt
+kidsclient.egg-info/dependency_links.txt
+kidsclient.egg-info/entry_points.txt
+kidsclient.egg-info/namespace_packages.txt
+kidsclient.egg-info/not-zip-safe
+kidsclient.egg-info/requires.txt
+kidsclient.egg-info/top_level.txt
